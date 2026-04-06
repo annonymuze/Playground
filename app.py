@@ -1,7 +1,6 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import requests
 
 st.set_page_config(page_title="Stock Analyzer", layout="wide")
 
@@ -67,17 +66,15 @@ with col_mid:
 @st.cache_data(ttl=600, show_spinner="Fetching data...")
 def fetch_data(symbol: str):
     """Fetch all needed data from yfinance for a given ticker."""
-    session = requests.Session()
-    session.headers['User-agent'] = 'Mozilla/5.0'
     try:
-        tk = yf.Ticker(symbol, session=session)
+        tk = yf.Ticker(symbol)
         info = tk.info
         if not info or info.get("quoteType") is None:
             return None, None, None
         financials = tk.financials  # annual income statement
         balance = tk.balance_sheet  # annual balance sheet
         return info, financials, balance
-    except yf.exceptions.YFRateLimitError:
+    except (yf.exceptions.YFRateLimitError, yf.exceptions.YFDataException):
         st.error(
             "Yahoo Finance is rate-limiting requests right now. "
             "Please wait a moment and try again."
